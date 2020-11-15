@@ -18,6 +18,7 @@ interface AuthContextData {
   signOut(): void;
 }
 
+// createContext returns an AuthContextData
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 const AuthProvider: React.FC = ({ children }) => {
