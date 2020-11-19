@@ -1,22 +1,10 @@
 import { Router } from 'express';
 
-import AuthenticateUserService from '@modules/users/services/AuthenticateUserService';
+import SessionController from '@modules/users/infra/http/controllers/SessionController';
 
-const sessionsRouter = Router();
+const sessionRouter = Router();
+const sessionController = new SessionController();
 
-sessionsRouter.post('/', async (request, response) => {
-  const { email, password } = request.body;
+sessionRouter.post('/', sessionController.create);
 
-  const authenticateUserService = new AuthenticateUserService();
-
-  const { user, token } = await authenticateUserService.execute({
-    email,
-    password,
-  });
-
-  delete user.password;
-
-  return response.json({ user, token });
-});
-
-export default sessionsRouter;
+export default sessionRouter;
