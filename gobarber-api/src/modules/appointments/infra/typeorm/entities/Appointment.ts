@@ -12,6 +12,7 @@ import User from '@modules/users/infra/typeorm/entities/User';
 
 @Entity('appointments')
 class Appointment {
+  // database is responsible for creating the id
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

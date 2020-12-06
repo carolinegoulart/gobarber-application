@@ -6,6 +6,7 @@ import uploadConfig from '@config/upload';
 import AppError from '@shared/errors/AppError';
 import User from '@modules/users/infra/typeorm/entities/User';
 import IUserRepository from '@modules/users/repositories/IUserRepository';
+import IStorageProvider from '@shared/container/providers/StorageProvider/models/IStorageProvider';
 
 interface IRequest {
   user_id: string;
@@ -16,7 +17,10 @@ interface IRequest {
 class UpdateUserAvatarService {
   constructor(
     @inject('UserRepository')
-    private userRepository: IUserRepository
+    private userRepository: IUserRepository,
+
+    @inject('StorageProvider')
+    private storageProvider: IStorageProvider
   ) {}
 
   public async execute({ user_id, avatarFileName }: IRequest): Promise<User> {
@@ -29,21 +33,15 @@ class UpdateUserAvatarService {
       );
     }
 
+    // user.avar = avatar that was alreary persisted in the database
+    // if the user already had an avatar, delete the previous one before updating
     if (user.avatar) {
-      // user.avar = avatar that was alreary persisted in the database
-      const userAvatarFilePath = path.join(uploadConfig.directory, user.avatar);
-
-      // check if the file exists
-      // fs.promises ensures the response is a promise (so that we can use await)
-      // stat function returns the status of a file (only if it exists)
-      const userAvatarFileExists = await fs.promises.stat(userAvatarFilePath);
-
-      if (userAvatarFileExists) {
-        await fs.promises.unlink(userAvatarFilePath);
-      }
+      await this.storageProvider.deleteFile(user.avatar);
     }
 
-    user.avatar = avatarFileName;
+    const filename = await this.storageProvider.saveFile(avatarFileName);
+
+    user.avatar = filename;
 
     await this.userRepository.save(user);
 
